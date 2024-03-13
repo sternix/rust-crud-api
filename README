@@ -6,3 +6,10 @@ DB_PORT = 5432
 DB_USER = postges
 DB_PASSWORD = secret
 DB_POOL_SIZE = 50
+
+CREATE TABLE users (
+	id int generated always as identity primary key,
+	name varchar(255),
+	email varchar(255),
+	phone varchar(50)
+);
