@@ -4,6 +4,7 @@ use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 mod db;
 mod errors;
 mod services;
+mod jresult;
 
 async fn index() -> impl Responder {
     HttpResponse::Ok()
