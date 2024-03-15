@@ -1,6 +1,7 @@
 use crate::errors::MyError;
 use actix_web::{web, HttpResponse};
 use serde::{Deserialize, Serialize};
+use crate::jresult::JResult;
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
@@ -25,9 +26,12 @@ async fn get_all(pool: web::Data<deadpool_postgres::Pool>) -> Result<HttpRespons
     log::info!("get_all get isteği geldi");
 
     let client = pool.get().await?;
-    let rows = client.query("SELECT * FROM users ORDER BY id ", &[]).await?;
+    let rows = client
+        .query("SELECT * FROM users ORDER BY id ", &[])
+        .await?;
     let users: Vec<User> = rows.iter().map(|r| User::from_row(r)).collect();
-    Ok(HttpResponse::Ok().json(&users))
+    let res = JResult::ok(users);
+    Ok(HttpResponse::Ok().json(&res))
 }
 
 async fn get_by_id(
@@ -44,11 +48,14 @@ async fn get_by_id(
         .query_opt("SELECT * FROM users WHERE id = $1 ", &[&id])
         .await?;
 
+    let res: JResult<_>;
     if let Some(row) = row {
-        Ok(HttpResponse::Ok().json(User::from_row(&row)))
+        res = JResult::ok(User::from_row(&row));
     } else {
-        Ok(HttpResponse::Ok().finish())
+        res = JResult::err("User not found");
     }
+
+    Ok(HttpResponse::Ok().json(&res))
 }
 
 async fn insert(
@@ -88,7 +95,7 @@ async fn update(
         )
         .await?;
 
-    Ok(HttpResponse::Ok().json(&user))
+    Ok(HttpResponse::Ok().json(JResult::ok(&user)))
 }
 
 async fn delete(
@@ -111,13 +118,13 @@ pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::resource("/user")
             .route(web::get().to(get_all))
-            .route(web::post().to(insert))
+            .route(web::post().to(insert)),
     );
 
     cfg.service(
         web::resource("/user/{id}")
             .route(web::delete().to(delete))
             .route(web::get().to(get_by_id))
-            .route(web::put().to(update))
+            .route(web::put().to(update)),
     );
 }
