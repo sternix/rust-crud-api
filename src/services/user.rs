@@ -1,7 +1,7 @@
 use crate::errors::MyError;
+use crate::jresult::JResult;
 use actix_web::{web, HttpResponse};
 use serde::{Deserialize, Serialize};
-use crate::jresult::JResult;
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
